@@ -1,0 +1,6 @@
+To start with, I got cargo and used it to set up a binary project.
+It creates the project with a certain layout, but it's tidy.
+It also creates a dependency tracking file, a nice touch!
+
+Using vim compiler settings from
+https://github.com/rust-lang/rust.vim/tree/master/compiler
