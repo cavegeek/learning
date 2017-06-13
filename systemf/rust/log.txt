@@ -4,3 +4,5 @@ It also creates a dependency tracking file, a nice touch!
 
 Using vim compiler settings from
 https://github.com/rust-lang/rust.vim/tree/master/compiler
+
+rustdoc doesn't show documentation of things in main.rs.
