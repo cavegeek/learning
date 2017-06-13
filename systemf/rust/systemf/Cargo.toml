@@ -4,3 +4,4 @@ version = "0.1.0"
 authors = ["Jason Stumpf <jason.stumpf@gmail.com>"]
 
 [dependencies]
+combine = "^2.3"

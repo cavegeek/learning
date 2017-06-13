@@ -27,6 +27,18 @@ enum Expr {
   TypeAbstract(String, Box<Expr>)
 }
 
+extern crate combine;
+use combine::{many, Parser, State};
+use combine::char::letter;
+
+// Parses its parameter, returning the corresponding expression or None.
+fn parse(input: &str) -> Option<Expr> {
+  match many(letter()).parse(input) {
+    Ok((id, "")) => Some(Expr::Id(id)),
+    _ => None,
+  }
+}
+
 fn main() {
-  println!("{:?}", Expr::TypeAbstract(String::from("a"), Box::new(Expr::Abstract(String::from("x"), TypeExpr::Id(String::from("a")), Box::new(Expr::Id(String::from("x")))))));
+  println!("{:?}", parse("varname"));
 }
