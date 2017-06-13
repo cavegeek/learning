@@ -1,0 +1,6 @@
+[package]
+name = "systemf"
+version = "0.1.0"
+authors = ["Jason Stumpf <jason.stumpf@gmail.com>"]
+
+[dependencies]
