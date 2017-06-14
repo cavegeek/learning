@@ -8,3 +8,6 @@ https://github.com/rust-lang/rust.vim/tree/master/compiler
 rustdoc doesn't show documentation of things in main.rs.
 
 Choosing combine for parsing, it looks more readable than nom.
+But it seems to have problems using a parser twice.
+The examples don't do this!
+It can be solved by returning a new parser from a unit function each use.
