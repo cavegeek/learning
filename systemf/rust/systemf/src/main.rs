@@ -9,7 +9,7 @@ enum TypeExpr {
   /// A function type (a -> b).
   Arrow(Box<TypeExpr>, Box<TypeExpr>),
   /// A forall, (forall a b).
-  ForAll(String, Box<TypeExpr>)
+  ForAll(String, Box<TypeExpr>),
 }
 
 /// A term expression.
@@ -24,7 +24,7 @@ enum Expr {
   /// Applying a term to a type.
   TypeApply(Box<Expr>, TypeExpr),
   /// A type lambda.
-  TypeAbstract(String, Box<Expr>)
+  TypeAbstract(String, Box<Expr>),
 }
 
 extern crate combine;
@@ -35,20 +35,20 @@ use combine::char::{letter, space};
 /// A parse function for Expr.
 /// This is needed because combine can't define recursive parsers without it.
 fn expr<I>(input: I) -> ParseResult<Expr, I>
-  where I: Stream<Item=char>
+  where I: Stream<Item = char>
 {
   let identifier = || many1(letter()).map(Expr::Id);
   let subexpr = || identifier();
   let white = || skip_many1(space());
   let subexpr_seq = sep_by(subexpr(), white());
-  fn to_apply(e : Expr, l : Vec<Expr>) -> Expr {
+  fn to_apply(e: Expr, l: Vec<Expr>) -> Expr {
     let mut result = e;
     for next in l {
       result = Expr::Apply(Box::new(result), Box::new(next));
     }
     result
   }
-  let mut apply = (subexpr(), white(), subexpr_seq).map(|(e,_,l)| to_apply(e,l));
+  let mut apply = (subexpr(), white(), subexpr_seq).map(|(e, _, l)| to_apply(e, l));
   apply.parse_stream(input)
 }
 
