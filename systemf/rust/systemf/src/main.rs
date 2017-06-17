@@ -30,7 +30,26 @@ enum Expr {
 extern crate combine;
 use combine::{many1, parser, sep_by, skip_many1};
 use combine::{Parser, ParseResult, Stream};
-use combine::char::{letter, space};
+use combine::char::{letter, space, spaces, string};
+
+/// A parse function for TypeExpr.
+/// This is needed because combine can't define recursive parsers without it.
+fn type_expr<I>(input: I) -> ParseResult<TypeExpr, I>
+  where I: Stream<Item = char>
+{
+  let identifier = || many1(letter()).skip(spaces()).map(TypeExpr::Id);
+  let arrow = || string("->").skip(spaces());
+  let arrow_expr = sep_by(identifier(), arrow());
+  fn to_arrow(e: TypeExpr, l: Vec<TypeExpr>) -> TypeExpr {
+    let mut result = e;
+    for next in l {
+      result = TypeExpr::Arrow(Box::new(result), Box::new(next));
+    }
+    result
+  }
+  let mut arrow = (identifier(), arrow(), arrow_expr).map(|(e, _, l)| to_arrow(e, l));
+  arrow.parse_stream(input)
+}
 
 /// A parse function for Expr.
 /// This is needed because combine can't define recursive parsers without it.
