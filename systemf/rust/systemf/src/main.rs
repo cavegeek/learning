@@ -28,8 +28,8 @@ enum Expr {
 }
 
 extern crate combine;
-use combine::{many1, parser, sep_by, skip_many1};
-use combine::{Parser, ParseResult, Stream};
+use combine::{choice, many1, parser, sep_by, skip_many1};
+use combine::{Parser, ParseResult, State, Stream};
 use combine::char::{letter, space, spaces, string};
 
 /// A parse function for TypeExpr.
@@ -56,8 +56,20 @@ fn type_expr<I>(input: I) -> ParseResult<TypeExpr, I>
 fn expr<I>(input: I) -> ParseResult<Expr, I>
   where I: Stream<Item = char>
 {
-  let identifier = || many1(letter()).map(Expr::Id);
-  let subexpr = || identifier();
+  fn identifier<I>(input: I) -> ParseResult<Expr, I>
+    where I: Stream<Item = char>
+  {
+    many1(letter()).map(Expr::Id).parse_stream(input)
+  }
+  fn abstraction<I>(input: I) -> ParseResult<Expr, I>
+    where I: Stream<Item = char>
+  {
+    let lam = string("\\").skip(spaces());
+    let abs = (lam, many1(letter()).skip(spaces()), parser(type_expr::<I>), parser(expr::<I>));
+    let mut abs_expr = abs.map(|(_, var, typ, exp)| Expr::Abstract(var, typ, Box::new(exp)));
+    abs_expr.parse_stream(input)
+  }
+  let subexpr = || parser(identifier).or(parser(abstraction));
   let white = || skip_many1(space());
   let subexpr_seq = sep_by(subexpr(), white());
   fn to_apply(e: Expr, l: Vec<Expr>) -> Expr {
@@ -71,14 +83,14 @@ fn expr<I>(input: I) -> ParseResult<Expr, I>
   apply.parse_stream(input)
 }
 
-// Parses its parameter, returning the corresponding expression or None.
-fn parse(input: &str) -> Option<Expr> {
-  match parser(expr).parse(input) {
-    Ok((e, "")) => Some(e),
-    _ => None,
+// Parses its parameter, printing the result.
+fn parse(input: &str) -> () {
+  match parser(expr).parse(State::new(input)) {
+    Ok((e, _)) => println!("{:?}", e),
+    Err(e) => println!("{}", e),
   }
 }
 
 fn main() {
-  println!("{:?}", parse("f x y"));
+  parse("\\x ta -> tb x y ");
 }
