@@ -11,3 +11,4 @@ Choosing combine for parsing, it looks more readable than nom.
 But it seems to have problems using a parser twice.
 The examples don't do this!
 It can be solved by returning a new parser from a unit function each use.
+Lambdas capture and thus behave differently from functions.
