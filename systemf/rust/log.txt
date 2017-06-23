@@ -12,3 +12,21 @@ But it seems to have problems using a parser twice.
 The examples don't do this!
 It can be solved by returning a new parser from a unit function each use.
 Lambdas capture and thus behave differently from functions.
+
+Because rust is careful with memory it's less easy to change associativity in
+a parser.
+I'd like:
+	(parse_expr, many(spaces().with(parse_expr))).map(apply)
+to work for either associativity with:
+	apply(e, l) {
+		l.into_iter().foldl(e, Expr::Apply)
+	}
+or
+	apply(e, l) {
+		l.into_iter().foldr(e, Expr::Apply)
+	}
+to return things like:
+	Apply(Apply(x, y), z)
+versus:
+	Apply(x, Apply(y, z))
+But rust doesn't have foldr and foldl, just fold, which is foldl.
