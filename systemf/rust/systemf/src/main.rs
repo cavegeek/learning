@@ -38,16 +38,16 @@ fn type_expr<I>(input: I) -> ParseResult<TypeExpr, I>
   where I: Stream<Item = char>
 {
   let identifier = || many1(letter()).skip(spaces()).map(TypeExpr::Id);
-  let arrow = || string("->").skip(spaces());
-  let arrow_expr = sep_by(identifier(), arrow());
-  fn to_arrow(e: TypeExpr, l: Vec<TypeExpr>) -> TypeExpr {
+  let arrow = string("->").skip(spaces());
+  fn to_arrow(l: Vec<TypeExpr>, e: TypeExpr) -> TypeExpr {
     let mut result = e;
-    for next in l {
-      result = TypeExpr::Arrow(Box::new(result), Box::new(next));
+    for prev in l.into_iter().rev() {
+      result = TypeExpr::Arrow(Box::new(prev), Box::new(result));
     }
     result
   }
-  let mut arrow = (identifier(), arrow(), arrow_expr).map(|(e, _, l)| to_arrow(e, l));
+  let mut arrow = (many(try(identifier().skip(arrow))), identifier())
+      .map(|(l, e)| to_arrow(l, e));
   arrow.parse_stream(input)
 }
 
