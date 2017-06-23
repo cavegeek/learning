@@ -28,7 +28,7 @@ enum Expr {
 }
 
 extern crate combine;
-use combine::{choice, many1, parser, sep_by, skip_many1};
+use combine::{many, many1, parser, skip_many1, try};
 use combine::{Parser, ParseResult, State, Stream};
 use combine::char::{letter, space, spaces, string};
 
@@ -71,15 +71,11 @@ fn expr<I>(input: I) -> ParseResult<Expr, I>
   }
   let subexpr = || parser(identifier).or(parser(abstraction));
   let white = || skip_many1(space());
-  let subexpr_seq = sep_by(subexpr(), white());
   fn to_apply(e: Expr, l: Vec<Expr>) -> Expr {
-    let mut result = e;
-    for next in l {
-      result = Expr::Apply(Box::new(result), Box::new(next));
-    }
-    result
+    l.into_iter().fold(e, |e, next| Expr::Apply(Box::new(e), Box::new(next)))
   }
-  let mut apply = (subexpr(), white(), subexpr_seq).map(|(e, _, l)| to_apply(e, l));
+  let mut apply = (subexpr(), many(white().with(subexpr())))
+      .map(|(e, l)| to_apply(e, l));
   apply.parse_stream(input)
 }
 
@@ -92,5 +88,5 @@ fn parse(input: &str) -> () {
 }
 
 fn main() {
-  parse("\\x ta -> tb x y ");
+  parse("\\x a -> b \\y a x y");
 }
