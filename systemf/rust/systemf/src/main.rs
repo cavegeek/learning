@@ -40,11 +40,8 @@ fn type_expr<I>(input: I) -> ParseResult<TypeExpr, I>
   let identifier = || many1(letter()).skip(spaces()).map(TypeExpr::Id);
   let arrow = string("->").skip(spaces());
   fn to_arrow(l: Vec<TypeExpr>, e: TypeExpr) -> TypeExpr {
-    let mut result = e;
-    for prev in l.into_iter().rev() {
-      result = TypeExpr::Arrow(Box::new(prev), Box::new(result));
-    }
-    result
+    let reviter = l.into_iter().rev();
+    reviter.fold(e, |e, prev| TypeExpr::Arrow(Box::new(prev), Box::new(e)))
   }
   let mut arrow = (many(try(identifier().skip(arrow))), identifier())
       .map(|(l, e)| to_arrow(l, e));
