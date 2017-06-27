@@ -28,7 +28,7 @@ enum Expr {
 }
 
 extern crate combine;
-use combine::{many, many1, parser, skip_many1, try};
+use combine::{between, many, many1, parser, skip_many, token, try};
 use combine::{Parser, ParseResult, State, Stream};
 use combine::char::{letter, space, spaces, string};
 
@@ -61,17 +61,32 @@ fn expr<I>(input: I) -> ParseResult<Expr, I>
   fn abstraction<I>(input: I) -> ParseResult<Expr, I>
     where I: Stream<Item = char>
   {
-    let lam = string("\\").skip(spaces());
+    let lam = token('\\').skip(spaces());
     let abs = (lam, many1(letter()).skip(spaces()), parser(type_expr::<I>), parser(expr::<I>));
     let mut abs_expr = abs.map(|(_, var, typ, exp)| Expr::Abstract(var, typ, Box::new(exp)));
     abs_expr.parse_stream(input)
   }
-  let subexpr = || parser(identifier).or(parser(abstraction));
-  let white = || skip_many1(space());
-  fn to_apply(e: Expr, l: Vec<Expr>) -> Expr {
-    l.into_iter().fold(e, |e, next| Expr::Apply(Box::new(e), Box::new(next)))
+  let typ = between(token('[').skip(spaces()), token(']').skip(spaces()), parser(type_expr::<I>));
+  fn subexpr<I>(input: I) -> ParseResult<Expr, I>
+    where I: Stream<Item = char>
+  {
+    parser(identifier).or(parser(abstraction)).parse_stream(input)
   }
-  let mut apply = (subexpr(), many(white().with(subexpr())))
+  enum ExprOrType {
+    E(Expr),
+    T(TypeExpr),
+  }
+  fn to_apply(e: Expr, l: Vec<ExprOrType>) -> Expr {
+    l.into_iter().fold(e, |result, next| {
+      match next {
+        ExprOrType::E(next) => Expr::Apply(Box::new(result), Box::new(next)),
+        ExprOrType::T(next) => Expr::TypeApply(Box::new(result), next),
+      }
+    })
+  }
+  let e_or_t = parser(subexpr).map(ExprOrType::E).or(typ.map(ExprOrType::T));
+  let white = skip_many(space());
+  let mut apply = (parser(subexpr), many(white.with(e_or_t)))
       .map(|(e, l)| to_apply(e, l));
   apply.parse_stream(input)
 }
@@ -85,5 +100,5 @@ fn parse(input: &str) -> () {
 }
 
 fn main() {
-  parse("\\x a -> b \\y a x y");
+  parse("\\f a -> b i [a -> b] f x");
 }

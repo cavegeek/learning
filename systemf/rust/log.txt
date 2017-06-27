@@ -30,3 +30,7 @@ to return things like:
 versus:
 	Apply(x, Apply(y, z))
 But rust doesn't have foldr and foldl, just fold, which is foldl.
+
+It's really easy to make combine infinite loop and run out of stack. It might
+be as easy to write a recursive ll parser by hand, and the type annotations
+would be simpler.
