@@ -6,9 +6,9 @@
 enum TypeExpr {
   /// A type variable.
   Id(String),
-  /// A function type (a -> b).
+  /// A function type, (a -> b).
   Arrow(Box<TypeExpr>, Box<TypeExpr>),
-  /// A forall, (forall a b).
+  /// A forall, (@ a b).
   ForAll(String, Box<TypeExpr>),
 }
 
@@ -17,13 +17,13 @@ enum TypeExpr {
 enum Expr {
   /// A term variable.
   Id(String),
-  /// Applying one term to another.
+  /// Applying one term to another, (f x).
   Apply(Box<Expr>, Box<Expr>),
-  /// A lambda.
+  /// A lambda, (\var type body).
   Abstract(String, TypeExpr, Box<Expr>),
-  /// Applying a term to a type.
+  /// Applying a term to a type, (f [type]).
   TypeApply(Box<Expr>, TypeExpr),
-  /// A type lambda.
+  /// A type lambda, (^var body).
   TypeAbstract(String, Box<Expr>),
 }
 
